@@ -1,0 +1,196 @@
+<% layout('layouts/boilerplate') -%>
+
+<body>
+  <br>
+    <h1 class="offset-3"><%=listp.title%></h1>
+    <div class="card offset-lg-3 offset-md-2 offset-sm-2" style="width: 50%; border: none;">
+      <img src="<%=listp.image.url%>" class="card-img-top read_card_image" style="height: 20rem; border-radius: 1rem;">
+      <div class="card-body ps-0">
+        <p>Owned by <b><%=listp.owner.username%></b></p>
+        <p><%=listp.description%></p>
+        <p>Country: <%=listp.country%> &nbsp; &nbsp; Location: <%=listp.location%></p>
+        <p>Price: &#8377;<%=listp.price.toLocaleString("en-IN")%></p>
+      </div>
+    </div>
+    <% if(currUser && currUser._id.equals(listp.owner._id)) {%>
+    <div class="btns">
+      <a class="btn btn-dark"href="/listings/<%=listp.id%>/edit">Edit your listing</a>
+      <form action="/listings/<%=listp.id%>?_method=DELETE" method="POST" style="display: inline;">
+        <button class="btn btn-dark">Delete this listing</button>
+      </form>
+    </div>
+    <% } %>
+    <% if(currUser) {%>
+    <div class="rev offset-3">
+      <hr>
+      <h2>Leave a review</h2>
+      <form action="/listings/<%=listp.id%>/reviews" method="POST" novalidate class="needs-validation">
+        <label for="rating" class="form-label">Rating</label>
+        <!-- <input type="range" min="1" max="5" name="rating" class="form-range" step="1" id="rating"> -->
+        <fieldset class="starability-slot">
+          <input type="radio" id="no-rate" class="input-no-rate" name="rating" value="1" checked aria-label="No rating." />
+          <input type="radio" id="first-rate1" name="rating" value="1" />
+          <label for="first-rate1" title="Terrible">1 star</label>
+          <input type="radio" id="first-rate2" name="rating" value="2" />
+          <label for="first-rate2" title="Not good">2 stars</label>
+          <input type="radio" id="first-rate3" name="rating" value="3" />
+          <label for="first-rate3" title="Average">3 stars</label>
+          <input type="radio" id="first-rate4" name="rating" value="4" />
+          <label for="first-rate4" title="Very good">4 stars</label>
+          <input type="radio" id="first-rate5" name="rating" value="5" />
+          <label for="first-rate5" title="Amazing">5 stars</label>
+        </fieldset>
+        <br>
+        <label for="comment" class="form-label">Comments</label>
+        <textarea name="comment" class="form-control" id="comment" required></textarea>
+        <div class="invalid-feedback">
+          Please write a comment
+        </div>
+        <br>
+        <button class="btn btn-dark">Submit</button>
+      </form>
+    </div>
+    <% } %>
+    <%if(listp.reviews.length > 0) {%>
+    <div class="reviews offset-3">
+      <hr>
+      <h2>All Reviews</h2>
+      <div class="row">
+      <%for(reviews of listp.reviews) {%>
+        <div class="card mb-3 col-5 ms-3" style="width: 20rem;">
+          <div class="card-body">
+            <h5 class="card-title">@<%=reviews.author.username%></h5>
+            <!-- <h6 class="card-subtitle mb-2 text-muted"><%=reviews.rating%> Star</h6> -->
+            <p class="starability-result" data-rating="<%=reviews.rating%>">
+            <!-- Rated: 3 stars -->
+            </p>
+            <p class="card-text"><%=reviews.comment%></p>
+            <%if(currUser) {%>
+            <form action="/listings/<%=listp._id%>/reviews/<%=reviews._id%>?_method=DELETE" method="POST">
+              <button class="btn btn-dark">Delete</button>
+            </form>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+      </div>
+    </div>
+    <%}%>
+    <div class="map-cont offset-3">
+      <hr>
+      <h2>Where you'll be</h2>
+      <div id="map"></div>
+    </div>
+    <br>
+    <script>
+      mapboxgl.accessToken = "<%= process.env.MAP_TOKEN %>";
+      let coordinates = <%- JSON.stringify(listp.geometry.coordinates) %>;
+      let tit = "<%= listp.title %>";
+      console.log(coordinates);
+    
+      const map = new mapboxgl.Map({
+        container: 'map', // container ID
+        style: 'mapbox://styles/mapbox/satellite-streets-v12', // style URL
+        center: coordinates, // starting position [lng, lat]
+        zoom: 9 // starting zoom
+      });
+    
+      // Define the pulsing dot marker
+      const pulsingDot = {
+        width: 64,
+        height: 64,
+        data: new Uint8Array(64 * 64 * 4),
+    
+        // Initialize the marker on the map
+        onAdd: function () {
+          const canvas = document.createElement('canvas');
+          canvas.width = this.width;
+          canvas.height = this.height;
+          this.context = canvas.getContext('2d');
+        },
+    
+        // Render the pulsing animation
+        render: function () {
+          const duration = 1000; // Animation duration in milliseconds
+          const t = (performance.now() % duration) / duration;
+    
+          const radius = (this.width / 2) * 0.3;
+          const outerRadius = (this.width / 2) * 0.7 * t + radius;
+    
+          const context = this.context;
+    
+          // Clear canvas
+          context.clearRect(0, 0, this.width, this.height);
+    
+          // Draw outer circle
+          context.beginPath();
+          context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
+          context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
+          context.fill();
+    
+          // Draw inner circle
+          context.beginPath();
+          context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
+          context.fillStyle = 'rgba(255, 100, 100, 1)';
+          context.strokeStyle = 'white';
+          context.lineWidth = 2 + 4 * (1 - t);
+          context.fill();
+          context.stroke();
+    
+          // Update marker's image data with canvas data
+          this.data = context.getImageData(0, 0, this.width, this.height).data;
+    
+          // Trigger map repaint to update marker animation
+          map.triggerRepaint();
+    
+          // Return true to indicate the marker image was updated
+          return true;
+        }
+      };
+    
+      // Add the pulsing dot marker image to the map
+      map.on('load', () => {
+        map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+    
+        // Add a GeoJSON data source with a point feature
+        map.addSource('dot-point', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: coordinates // Icon position [lng, lat]
+                }
+              }
+            ]
+          }
+        });
+    
+        // Add a layer with the pulsing dot marker
+        map.addLayer({
+          id: 'layer-with-pulsing-dot',
+          type: 'symbol',
+          source: 'dot-point',
+          layout: {
+            'icon-image': 'pulsing-dot',
+            'icon-allow-overlap': true
+          }
+        });
+    
+        // Add a red marker with a popup
+        new mapboxgl.Marker({ color: 'red' })
+          .setLngLat(coordinates)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<h3>${tit}</h3><p>You will be here</p>`
+            )
+          )
+          .addTo(map);
+      });
+    </script>
+    
+</body>
+

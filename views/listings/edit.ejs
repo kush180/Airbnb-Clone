@@ -1,0 +1,62 @@
+<% layout('layouts/boilerplate') -%>
+
+<body>
+    <br>
+    <h1 class="offset-2">Edit listing</h1>
+    <br>
+    <div class="row">
+        <div class="col-8 offset-2">
+    <form action="/listings/<%=list.id%>?_method=PUT" method="POST" class="needs-validation" novalidate enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="title" class="form-label">Edit title</label>
+            <input name="title" value="<%=list.title%>" class="form-control" required>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Edit description</label>
+            <textarea name="description" class="form-control" required><%=list.description%></textarea>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        <div class="mb-3">
+            <img src="<%=originalImageUrl%>">
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Upload New Image</label>
+            <input name="image" type="file" class="form-control">
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        <div class="row">
+        <div class="mb-3 col-md-4">
+            <label for="price" class="form-label">Edit price</label>
+            <input name="price" value="<%=list.price%>" class="form-control" required>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        <div class="mb-3 col-md-8">
+            <label for="location" class="form-label">Edit location</label>
+            <input name="location" value="<%=list.location%>" class="form-control" required>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        </div>
+        <div class="mb-3">
+            <label for="country" class="form-label">Edit country</label>
+            <input name="country" value="<%=list.country%>" class="form-control" required>
+            <div class="valid-feedback">
+                Looks Good
+            </div>
+        </div>
+        <button class="btn btn-dark">Create</button>
+    </form>
+</div>
+    </div>
+    <br>
+</body>
