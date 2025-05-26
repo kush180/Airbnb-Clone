@@ -14,15 +14,23 @@ main().then(() => {
 
 async function init() {
     await Listing.deleteMany({});
+
     initData.data = initData.data.map((obj) => ({
         ...obj,
-        owner: "6687c17301372445790d0077"
-    }));    
-    Listing.insertMany(initData.data).then(() => {
-        console.log("Data Inserted");
-    }).catch((Err) => {
-        console.log(Err);
-    });
+        owner: "6687c17301372445790d0077",
+        geometry: {
+            type: "Point",
+            coordinates: obj.geometry?.coordinates || [0, 0] // fallback if missing
+        }
+    }));
+
+    Listing.insertMany(initData.data)
+        .then(() => {
+            console.log("Data Inserted");
+        })
+        .catch((err) => {
+            console.log("Error inserting data:", err);
+        });
 }
 
 init();
